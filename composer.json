@@ -1,0 +1,35 @@
+{
+    "name": "jordandalton/tackle-grokbot",
+    "description": "Named webhook automations and delivery history for Laravel Tackle.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.3",
+        "jordandalton/laravel-tackle": "^1.56.8"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^10.0",
+        "phpunit/phpunit": "^11.0",
+        "laravel/pint": "^1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Grokbot\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Grokbot\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Grokbot\\GrokbotServiceProvider"
+            ]
+        }
+    },
+    "scripts": {
+        "test": "phpunit"
+    }
+}

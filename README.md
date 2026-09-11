@@ -1,0 +1,65 @@
+# Tackle Grokbot
+
+`jordandalton/tackle-grokbot` adds named Cursor automation webhooks to Laravel Tackle. Register any number of bots with instructions, let the agent discover and invoke them, and inspect delivery history.
+
+Requires PHP 8.3+, Laravel 12/13, and Laravel Tackle ^1.56.8. Tackle 1.56.8 adds automatic discovery of package tools through the `tackle.tools` container tag.
+
+## Installation
+
+Until the package is available on Packagist, add its GitHub repository to your Laravel application:
+
+```bash
+composer config repositories.tackle-grokbot vcs https://github.com/JordanDalton/tackle-grokbot
+composer require jordandalton/tackle-grokbot:^0.1 -W
+php artisan migrate
+php artisan grokbot:register
+```
+
+Laravel discovers the service provider automatically. Migrations are loaded by the package. The application must have an `APP_KEY` for encrypted credentials.
+
+## Manage bots
+
+- `grokbot:register` prompts for a unique name, instructions, Cursor automation webhook URL, hidden bearer token, and enabled status. Run it again for each additional bot. There is no bot count limit.
+- `grokbot:edit` selects a bot by name and edits the same fields. Leave the token blank to keep it, or enter a replacement to rotate it.
+- `grokbot:remove` selects a bot and asks for confirmation. It soft-deletes the bot, clears its URL and token, and disables it. History remains. Removed names remain reserved so past deliveries retain an unambiguous identity. This cannot cancel an HTTP request already in flight.
+- `grokbot:history --bot=1 --page=1` shows 25 deliveries per page, including removed bots. Omit `--bot` for all bots.
+
+Credentials have no CLI argument or option: enter them directly into the hidden terminal prompt. No supplied credentials or endpoints are seeded by the package.
+
+Instructions should explain when to use the bot and what JSON fields it expects. For example: “Reviews pull requests. Send repository_url, pr_number, and optional review_concerns.” Instructions are agent-facing metadata, not automatically added to the outbound payload.
+
+## Agent tools
+
+The default Tackle agent receives three tools through the `tackle.tools` container tag. They retain Tackle's allowlist, hooks, and tool event handling:
+
+- `ListGrokbots(page?)`: enabled bot IDs, names, instructions, and enabled status, 25 per page.
+- `SendToGrokbot(grokbot_id, payload)`: payload is a string containing a JSON object, maximum 64 KiB. The package supplies the saved URL and authorization internally.
+- `ListGrokbotDeliveries(grokbot_id?, page?)`: sanitized delivery history, 25 per page.
+
+If `tackle.tools` is configured as an allowlist, include the tool class names above. Custom agents that override `tools()` must include these classes themselves; read-only and lean agents do not gain sending access automatically. MCP tools are separately configured in `tackle.mcp.tools`.
+
+## Delivery behavior
+
+Requests use POST, JSON, and bearer authentication. Destinations are restricted to HTTPS Cursor automation URLs on `api2.cursor.sh`. Redirects are not followed. Connect timeout is 10 seconds and overall timeout is 30 seconds. Requests are synchronous and are never automatically retried.
+
+Every attempt is persisted before HTTP:
+
+- `sending`: the attempt was recorded; a process interruption can leave this state unresolved.
+- `accepted`: the webhook returned 2xx. This does not report completion of the remote automation.
+- `failed`: the webhook returned a non-2xx status, including redirects.
+- `unknown`: transport failed; the remote automation may have started. Investigate before resending.
+
+Logs retain the bot ID, sanitized payload, status, HTTP status, duration, timestamps, and a generic error. Response bodies, headers, and exception messages are deliberately not persisted. Payload fields named like credentials and occurrences of the destination's bearer token are redacted. Other task content is retained; do not include unnecessary secrets in payloads. History is retained indefinitely unless the host application removes it.
+
+Tokens are encrypted at rest and both tokens and URLs are hidden from model serialization and discovery tools. These boundaries do not stop an agent with arbitrary application PHP/shell/database access from decrypting credentials. Configure host permissions accordingly. Host HTTP instrumentation such as Telescope must separately redact Authorization headers.
+
+## Development
+
+From this package directory, using the sibling Tackle checkout’s installed dependencies:
+
+```bash
+../tackle/vendor/bin/phpunit -c phpunit.xml
+../tackle/vendor/bin/pint --test .
+```
+
+With this package’s own Composer dependencies installed, run `composer test`. Tests fake HTTP; no live automation is triggered.
