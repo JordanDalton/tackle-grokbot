@@ -11,11 +11,12 @@ Until the package is available on Packagist, add its GitHub repository to your L
 ```bash
 composer config repositories.tackle-grokbot vcs https://github.com/JordanDalton/tackle-grokbot
 composer require jordandalton/tackle-grokbot:^0.1 -W
-php artisan migrate
-php artisan grokbot:register
+php artisan grokbot:install
 ```
 
 Laravel discovers the service provider automatically. Migrations are loaded by the package. The application must have an `APP_KEY` for encrypted credentials.
+
+The installer runs only this package’s migrations, then offers to register the first bot. It is safe to rerun: existing migrations and bots are preserved. Decline registration to configure bots later. For unattended deployment, use `php artisan grokbot:install --no-interaction`; production also requires `--force`. Registration prompts are skipped in unattended mode.
 
 ## Manage bots
 

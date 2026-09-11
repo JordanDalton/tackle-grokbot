@@ -19,7 +19,7 @@ class GrokbotServiceProvider extends ServiceProvider
     {
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
         if ($this->app->runningInConsole()) {
-            $this->commands([Commands\RegisterGrokbot::class, Commands\EditGrokbot::class, Commands\RemoveGrokbot::class, DeliveryHistory::class]);
+            $this->commands([Commands\InstallGrokbot::class, Commands\RegisterGrokbot::class, Commands\EditGrokbot::class, Commands\RemoveGrokbot::class, DeliveryHistory::class]);
         }
     }
 }
