@@ -6,11 +6,26 @@ Requires PHP 8.3+, Laravel 12/13, and Laravel Tackle ^1.56.8. Tackle 1.56.8 adds
 
 ## Installation
 
-Until the package is available on Packagist, add its GitHub repository to your Laravel application:
+With Tackle 1.56.9 or later, install and set up Grokbot in one command:
 
 ```bash
-composer config repositories.tackle-grokbot vcs https://github.com/JordanDalton/tackle-grokbot
-composer require jordandalton/tackle-grokbot:^0.1 -W
+php artisan tackle:install grokbot
+```
+
+This installs `jordandalton/tackle-grokbot:^0.1.1` as a development dependency, then starts `grokbot:install` in a fresh Artisan process. Use `--no-dev` to install it as a production dependency. If the package is already installed with its setup command, Composer is skipped and setup runs again.
+
+For unattended production setup:
+
+```bash
+php artisan tackle:install grokbot --no-dev --no-interaction --force
+```
+
+Registration is offered only in an interactive terminal. Without a TTY, setup runs non-interactively; register credentials afterward from a terminal.
+
+Alternatively, install the package directly (also supported with Tackle 1.56.8):
+
+```bash
+composer require jordandalton/tackle-grokbot:^0.1.1 -W
 php artisan grokbot:install
 ```
 
